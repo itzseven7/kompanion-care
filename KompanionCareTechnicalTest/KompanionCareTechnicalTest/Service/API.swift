@@ -9,4 +9,5 @@ import Foundation
 
 enum APIConstants {
     static let weatherAPIKey = Bundle.main.infoDictionary?["WEATHER_API_KEY"] as? String
+    static let weatherAPIBaseURL = Bundle.main.infoDictionary?["WEATHER_API_BASE_URL"] as? String
 }
