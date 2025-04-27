@@ -1,0 +1,11 @@
+//
+//  Config.xcconfig
+//  KompanionCareTechnicalTest
+//
+//  Created by Romain Dubreucq on 27/04/2025.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+WEATHER_API_KEY = 1a9e0690e355f97531ab1bab743e0209
