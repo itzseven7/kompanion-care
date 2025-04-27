@@ -6,12 +6,23 @@
 //
 
 import SwiftUI
+import ComposableArchitecture
 
 @main
 struct KompanionCareTechnicalTestApp: App {
+    let locationService = LiveLocationService()
+    let weatherRepository = LiveWeatherRepository()
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            WeatherView(
+                store: .init(initialState: .init()) {
+                    Weather(
+                        locationService: locationService,
+                        weatherRepository: weatherRepository
+                    )
+                }
+            )
         }
     }
 }
