@@ -46,33 +46,44 @@ struct LiveWeatherRepository: WeatherRepository {
     }
     
     func fetchTemperature(for location: CLLocation) async throws -> Measurement<UnitTemperature> {
-        let temperature: TemperatureResponse = try await getContent(
-            from: GetTemperatureAPIRoute(
-                latitude: location.coordinate.latitude,
-                longitude: location.coordinate.longitude
+        do {
+            let temperature: TemperatureResponse = try await getContent(
+                from: GetTemperatureAPIRoute(
+                    latitude: location.coordinate.latitude,
+                    longitude: location.coordinate.longitude
+                )
             )
-        )
-        
-        return .init(value: temperature.current.temperature, unit: .celsius)
+            
+            return .init(value: temperature.current.temperature, unit: .celsius)
+        } catch {
+            throw Self.Error.failedToFetchTemperature(error)
+        }
     }
     
     func fetchCityName(for location: CLLocation) async throws -> String {
-        let cities: [CityNameResponse] = try await getContent(
-            from: GetCityNameAPIRoute(
-                latitude: location.coordinate.latitude,
-                longitude: location.coordinate.longitude
+        do {
+            let cities: [CityNameResponse] = try await getContent(
+                from: GetCityNameAPIRoute(
+                    latitude: location.coordinate.latitude,
+                    longitude: location.coordinate.longitude
+                )
             )
-        )
-        
-        guard let firstCityName = cities.first?.name else {
-            throw Self.Error.noCity
+            
+            guard let firstCityName = cities.first?.name else {
+                throw Self.Error.noCity
+            }
+            
+            return firstCityName
+        } catch {
+            throw Self.Error.failedToFetchCityName(error)
         }
-        
-        return firstCityName
     }
     
     enum Error: Swift.Error {
         case noCity
+        
+        case failedToFetchTemperature(Swift.Error)
+        case failedToFetchCityName(Swift.Error)
     }
 }
 

@@ -17,6 +17,8 @@ struct WeatherView: View {
             if store.loading {
                 ProgressView()
                     .progressViewStyle(.circular)
+            } else if store.errorMessage != nil {
+                errorView
             } else if store.locationServiceIsAuthorized == false {
                 locationAutorizationView
             } else if store.locationServiceIsEnabled == false {
@@ -82,6 +84,16 @@ struct WeatherView: View {
         }
         .padding()
     }
+    
+    private var errorView: some View {
+        VStack {
+            Image(systemName: "xmark")
+                .imageScale(.large)
+                .foregroundStyle(.red)
+            Text("Error: \(store.errorMessage ?? "")")
+        }
+        .padding()
+    }
 }
 
 #if DEBUG
@@ -103,7 +115,12 @@ class PreviewLocationService: LocationService {
     }
     
     func fetchLocation() async throws -> CLLocation {
+        throw Self.Error.failedToFetchLocation
         return .init(latitude: 0, longitude: 0)
+    }
+    
+    enum Error: Swift.Error {
+        case failedToFetchLocation
     }
 }
 
