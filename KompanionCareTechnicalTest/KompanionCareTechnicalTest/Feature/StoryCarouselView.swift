@@ -49,9 +49,6 @@ struct StoryCarouselView: View {
                                 }
                             }
                     )
-                    .onAppear {
-                        store.send(.markStoryAsSeen)
-                    }
                 VStack {
                     ProgressView(value: store.timerProgress)
                         .progressViewStyle(.linear)

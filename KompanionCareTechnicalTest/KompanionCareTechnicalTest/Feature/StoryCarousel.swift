@@ -44,7 +44,6 @@ struct StoryCarousel {
         
         case nextStory
         case previousStory
-        case markStoryAsSeen
         
         case startTimer
         case createTimer
@@ -100,9 +99,6 @@ struct StoryCarousel {
                 state.elapsedTime = 0
                 state.timerProgress = 0
                 
-                return .none
-            case .markStoryAsSeen:
-                state.stories[state.currentStoryIndex].isSeen = true
                 return .none
             case .startTimer:
                 return .send(.enableTimer(true))
