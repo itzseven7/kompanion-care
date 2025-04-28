@@ -14,7 +14,10 @@ struct WeatherView: View {
     
     var body: some View {
         Group {
-            if store.locationServiceIsAuthorized == false {
+            if store.loading {
+                ProgressView()
+                    .progressViewStyle(.circular)
+            } else if store.locationServiceIsAuthorized == false {
                 locationAutorizationView
             } else if store.locationServiceIsEnabled == false {
                 locationEnabledView

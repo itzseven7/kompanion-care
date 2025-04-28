@@ -16,13 +16,14 @@ struct Weather {
     
     @ObservableState
     struct State {
+        var loading: Bool = false
         var locationServiceIsEnabled: Bool = false
         var locationServiceIsAuthorized: Bool = false
         var cityName: String?
         var temperature: String?
     }
     
-    enum Action {
+    indirect enum Action {
         case checkLocationServiceIsEnabled
         case locationServiceIsEnabled(Bool)
         case checkLocationPermission
@@ -30,6 +31,8 @@ struct Weather {
         case fetchLocation
         case fetchTemperature(CLLocation)
         case setTemperatureAndCityName(Measurement<UnitTemperature>, String)
+        case loading
+        case stopLoading(Action)
     }
     
     var body: some Reducer<State, Action> {
@@ -37,8 +40,13 @@ struct Weather {
             switch action {
             case .checkLocationServiceIsEnabled:
                 return .run { send in
+                    await send(.loading)
                     let isEnabled = await locationService.locationServicesEnabled()
-                    await send(.locationServiceIsEnabled(isEnabled))
+                    await send(
+                        .stopLoading(
+                            .locationServiceIsEnabled(isEnabled)
+                        )
+                    )
                 }
             case .locationServiceIsEnabled(let enabled):
                 state.locationServiceIsEnabled = enabled
@@ -53,6 +61,7 @@ struct Weather {
                 }
             case .fetchLocation:
                 return .run { send in
+                    await send(.loading)
                     let location = try await locationService.fetchLocation()
                     await send(.fetchTemperature(location))
                 }
@@ -60,12 +69,22 @@ struct Weather {
                 return .run { send in
                     let temperature = try await weatherRepository.fetchTemperature(for: location)
                     let cityName = try await weatherRepository.fetchCityName(for: location)
-                    await send(.setTemperatureAndCityName(temperature, cityName))
+                    await send(
+                        .stopLoading(
+                            .setTemperatureAndCityName(temperature, cityName)
+                        )
+                    )
                 }
             case .setTemperatureAndCityName(let temperature, let cityName):
                 state.temperature = MeasurementFormatter().string(from: temperature)
                 state.cityName = cityName
                 return .none
+            case .loading:
+                state.loading = true
+                return .none
+            case .stopLoading(let nextAction):
+                state.loading = false
+                return .send(nextAction)
             }
         }
     }
