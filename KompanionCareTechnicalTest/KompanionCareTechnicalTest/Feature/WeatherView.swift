@@ -12,23 +12,38 @@ import ComposableArchitecture
 struct WeatherView: View {
     let store: StoreOf<Weather>
     
+    @State private var showingSheet = false
+    
     var body: some View {
-        Group {
-            if store.loading {
-                ProgressView()
-                    .progressViewStyle(.circular)
-            } else if store.errorMessage != nil {
-                errorView
-            } else if store.locationServiceIsAuthorized == false {
-                locationAutorizationView
-            } else if store.locationServiceIsEnabled == false {
-                locationEnabledView
-            } else if store.temperature != nil {
-                weatherView
-            } else {
-                weatherRequestView
+        VStack {
+            Group {
+                if store.loading {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                } else if store.errorMessage != nil {
+                    errorView
+                } else if store.locationServiceIsAuthorized == false {
+                    locationAutorizationView
+                } else if store.locationServiceIsEnabled == false {
+                    locationEnabledView
+                } else if store.temperature != nil {
+                    weatherView
+                } else {
+                    weatherRequestView
+                }
             }
+            Button {
+                showingSheet = true
+            } label: {
+                Text("Stories")
+            }
+
         }
+        .sheet(isPresented: $showingSheet, onDismiss: {
+            
+        }, content: {
+            storyCarouselView()
+        })
         .onAppear {
             store.send(.checkLocationPermission)
         }
@@ -94,12 +109,26 @@ struct WeatherView: View {
         }
         .padding()
     }
+    
+    private func storyCarouselView() -> some View {
+        StoryCarouselView(
+            store: .init(
+                initialState: .init(),
+                reducer: {
+                    StoryCarousel(
+                        storyRepository: LiveStoryRepository()
+                    )
+                }
+            )
+        )
+    }
 }
 
 #if DEBUG
 
 class PreviewLocationService: LocationService {
     private var authorized = false
+    private var shouldFail = false
     
     func isLocationAuthorized() -> Bool {
         return authorized
@@ -115,8 +144,11 @@ class PreviewLocationService: LocationService {
     }
     
     func fetchLocation() async throws -> CLLocation {
-        throw Self.Error.failedToFetchLocation
-        return .init(latitude: 0, longitude: 0)
+        if shouldFail {
+            throw Self.Error.failedToFetchLocation
+        } else {
+            return .init(latitude: 0, longitude: 0)
+        }
     }
     
     enum Error: Swift.Error {
